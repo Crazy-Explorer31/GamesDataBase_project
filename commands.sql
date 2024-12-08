@@ -170,22 +170,130 @@ FROM
     Servers;
 
 ---------------------------------- TASK 6 ----------------------------------
-
+-- Maxim
 
 
 ---------------------------------- TASK 7 ----------------------------------
-
+-- Nastya
 
 
 ---------------------------------- TASK 8 ----------------------------------
+DROP VIEW IF EXISTS games.GamesSummary;
 
+CREATE VIEW games.GamesSummary AS
+SELECT
+    gu.GameName AS "Игра",
+    cu.CompanyName AS "Производитель",
+    count(DISTINCT u.UserId) AS "Сколько людей купили",
+    avg(p.NumberHours) AS "Среднее количество часов в игре",
+    string_agg(DISTINCT u.Nickname, ', ') AS "Никнеймы играющих в игру"
+FROM
+    games.GameUnique gu
+    INNER JOIN games.Games g ON gu.GameId = g.GameId
+    LEFT JOIN games.Companies c ON g.CompanyId = c.CompanyId
+    INNER JOIN games.CompanyUnique cu ON c.CompanyId = cu.CompanyId
+    LEFT JOIN games.Profiles p ON gu.GameId = p.GameId
+    LEFT JOIN games.Users u ON p.UserId = u.UserId
+GROUP BY
+    gu.GameName,
+    cu.CompanyName
+ORDER BY
+    "Сколько людей купили" DESC,
+    "Среднее количество часов в игре" DESC;
 
+SELECT
+    *
+FROM
+    GamesSummary;
+
+DROP VIEW IF EXISTS games.PlayersSummary;
+
+CREATE VIEW games.PlayersSummary AS
+with most_played_games AS (
+    SELECT
+        p.UserId,
+        gu.GameName,
+        p.NumberHours,
+        rank() OVER (PARTITION BY p.UserId ORDER BY (p.NumberHours) DESC) AS rank
+FROM
+    games.Profiles p
+    JOIN games.GameUnique gu ON p.GameId = gu.GameId
+ORDER BY
+    rank ASC
+)
+SELECT
+    u.Nickname AS "Никнейм игрока",
+    count(DISTINCT p.GameId) AS "Число игр во владении",
+    sum(p.NumberHours) AS "Общее время в играх",
+    round(avg(p.NumberHours), 0) AS "Среднее время в игре",
+    max(p.NumberHours) AS "Максимальное время в игре",
+    min(p.NumberHours) AS "Минимальное время в игре",
+    string_agg(DISTINCT gu.GameName, ', ') AS "Игры во владении",
+    count(DISTINCT p2.UserId) AS "Число игровых профилей",
+    avg(p2.NumberHours) AS "Среднее время игры по профилям",
+    (
+        SELECT
+            GameName
+        FROM
+            most_played_games
+        LIMIT 1) AS "Любимая игра"
+FROM
+    games.Users u
+    LEFT JOIN games.Profiles p ON u.UserId = p.UserId
+    LEFT JOIN games.GameUnique gu ON p.GameId = gu.GameId
+    LEFT JOIN games.Profiles p2 ON p.GameId = p2.GameId
+GROUP BY
+    u.Nickname,
+    u.UserId;
+
+SELECT
+    *
+FROM
+    PlayersSummary;
+
+DROP VIEW IF EXISTS games.CompaniesSummary;
+
+CREATE VIEW CompaniesSummary AS
+WITH TotalUsersCount AS (
+    SELECT
+        COUNT(DISTINCT UserId) AS TotalUsers
+    FROM
+        games.Users
+),
+MainSummary AS (
+    SELECT
+        cu.CompanyName,
+        COUNT(DISTINCT g.GameId) AS "Число разработанных игр",
+        COUNT(DISTINCT p.UserId) AS "Число привлеченных игроков",
+        SUM(p.NumberHours) AS "Сколько часов потрачено за их играми",
+        round(AVG(g.GameCost)) AS "Средняя цена игры",
+        c.WorkersNumber AS "Число сотрудников"
+    FROM
+        games.CompanyUnique cu
+        INNER JOIN games.Companies c ON cu.CompanyId = c.CompanyId
+        LEFT JOIN games.Games g ON c.CompanyId = g.CompanyId
+        LEFT JOIN games.Profiles p ON g.GameId = p.GameId
+    GROUP BY
+        cu.CompanyName,
+        c.WorkersNumber
+)
+SELECT
+    ms.*,
+    COALESCE(CAST(ms. "Число привлеченных игроков" AS float) / tuc.TotalUsers * 100, 0) AS "Процент привлеченных игроков"
+FROM
+    MainSummary AS ms
+    CROSS JOIN TotalUsersCount AS tuc;
+
+SELECT
+    *
+FROM
+    CompaniesSummary;
 
 ---------------------------------- TASK 9 ----------------------------------
-
+-- Nastya
 
 
 ---------------------------------- TASK 10 ----------------------------------
-
+-- Danil
 
 
