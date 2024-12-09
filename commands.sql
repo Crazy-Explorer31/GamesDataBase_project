@@ -175,7 +175,57 @@ FROM
 
 ---------------------------------- TASK 7 ----------------------------------
 -- Nastya
+CREATE SCHEMA views;
+SET search_path = views, public;
 
+CREATE OR REPLACE VIEW users_view AS
+SELECT UserId, Age, Nickname, UserLevel, Balance,  
+LEFT(Email, POSITION('@' IN Email) - 1) || '***@***' AS masked_email, 
+FROM Users;
+
+SELECT * FROM users_view;
+
+CREATE OR REPLACE VIEW games_view AS
+SELECT GameId, CompanyId, GameCost, NumberPlayers
+FROM Games;
+
+SELECT * FROM games_view;
+
+CREATE OR REPLACE VIEW servers_view AS
+SELECT ServerId, GameId, Maxload, Country, SupportEmail
+FROM Servers;
+
+SELECT * FROM servers_view;
+
+CREATE OR REPLACE VIEW profiles_view AS
+SELECT ProfileId, UserId, GameId, NumberHours
+FROM Profiles;
+
+SELECT * FROM profiles_view;
+
+CREATE OR REPLACE VIEW support_service_view AS
+SELECT SupportServiceId, GameId, Email, Hotline
+FROM SupportService;
+
+SELECT * FROM support_service_view;
+
+CREATE OR REPLACE VIEW companies_view AS
+SELECT CompanyId, WorkersNumber, HeadOfficeAdress, CEOEmail, Country
+FROM Companies;
+
+SELECT * FROM companies_view;
+
+CREATE OR REPLACE VIEW companies_unique_view AS 
+SELECT CompanyId, CompanyName
+FROM CompanyUnique;
+
+SELECT * FROM companies_unique_view;
+
+CREATE OR REPLACE VIEW game_unique_view AS
+SELECT GameId, GameName
+FROM GameUnique;
+
+SELECT * FROM game_unique_view;
 
 ---------------------------------- TASK 8 ----------------------------------
 DROP VIEW IF EXISTS games.GamesSummary;
