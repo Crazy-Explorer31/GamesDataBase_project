@@ -362,6 +362,7 @@ CREATE TABLE users_history (
   operation_name text, 
   operation_time timestamp(0),
   updated_by text, 
+  UserId,
   old_nickname text, 
   new_nickname text, 
   old_password text, 
@@ -374,7 +375,7 @@ CREATE OR REPLACE function tg_log_fn()
 RETURNS trigger AS $$
   BEGIN
     INSERT INTO users_history
-    VALUES (tg_op, CURRENT_TIMESTAMP, current_user, old.Nickname, new.Nickname, old.UserPassword, new.UserPassword, old.Email, new.Email);
+    VALUES (tg_op, CURRENT_TIMESTAMP, current_user, UserId, old.Nickname, new.Nickname, old.UserPassword, new.UserPassword, old.Email, new.Email);
     RETURN NULL;
   END;
 $$ language plpgsql;
