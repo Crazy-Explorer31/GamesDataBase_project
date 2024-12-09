@@ -341,7 +341,53 @@ FROM
 
 ---------------------------------- TASK 9 ----------------------------------
 -- Nastya
+CREATE OR REPLACE function tg_update() 
+RETURNS trigger AS $$
+  BEGIN
+    IF new.Age is NULL OR new.Age < 16
+    THEN raise exception 'Возраст некорректен';
+    END IF;
+    IF new.Nickname is NULL
+    THEN raise exception 'Никнейм обязателен';
+    END IF;
+    RETURN new;
+  END;
+$$ language plpgsql;
 
+CREATE trigger t_update
+BEFORE INSERT OR UPDATE ON Users
+FOR each ROW EXECUTE function tg_update();
+
+CREATE TABLE users_history (
+  operation_name text, 
+  operation_time timestamp(0),
+  updated_by text, 
+  old_nickname text, 
+  new_nickname text, 
+  old_password text, 
+  new_password text, 
+  old_email text, 
+  new_email text
+);
+
+CREATE OR REPLACE function tg_log_fn()
+RETURNS trigger AS $$
+  BEGIN
+    INSERT INTO users_history
+    VALUES (tg_op, CURRENT_TIMESTAMP, current_user, old.Nickname, new.Nickname, old.UserPassword, new.UserPassword, old.Email, new.Email);
+    RETURN NULL;
+  END;
+$$ language plpgsql;
+
+CREATE trigger tg_log_fn
+AFTER DELETE OR INSERT OR UPDATE ON Users
+FOR each ROW EXECUTE function tg_log_fn();
+-------chech_if_working-------------
+UPDATE Users
+SET Email = '0_user@gmail.com'
+WHERE Email = 'new_user@gmail.com';
+
+SELECT * FROM users_history;
 
 ---------------------------------- TASK 10 ----------------------------------
 -- Danil
