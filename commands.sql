@@ -391,6 +391,43 @@ WHERE Email = 'new_user@gmail.com';
 SELECT * FROM users_history;
 
 ---------------------------------- TASK 10 ----------------------------------
--- Danil
+
+-- Добавляет нового пользвоателя игровой площадки, попутно создавая профиль в игре game_name  
+CREATE OR REPLACE PROCEDURE add_user(
+    user_age INT,
+    user_email TEXT,
+    user_nickname TEXT,
+    user_password TEXT,
+    user_level INT,
+    user_balance INT,
+    game_name TEXT) 
+AS $$
+
+  DECLARE
+      user_id INT;
+      game_id INT;
+  
+  BEGIN
+      SELECT GameId INTO game_id
+      FROM GameUnique
+      WHERE GameName = game_name;
+      
+      IF game_id IS NULL 
+      THEN RAISE EXCEPTION 'Нет игры с таким названием.';
+      END IF;
+  
+      INSERT INTO Users (Age, Email, Nickname, UserPassword, UserLevel, Balance)
+      VALUES (user_age, user_email, user_nickname, user_password, user_level, user_balance)
+      RETURNING UserId INTO user_id;
+  
+      INSERT INTO Profiles (GameId, UserId, NumberHours)
+      VALUES (game_id, user_id, 0);
+  END;
+$$ LANGUAGE plpgsql;
 
 
+-- Добавит нового пользователя и создаст ему профиль в игре Майнкрафт    
+CALL add_user(19, 'Nikita2005@gmail.com', 'Nagibator228', '1337zxc', 0, 0, 'Minecraft');
+
+--Упадет с ошибкой
+CALL add_user(49, 'NeSkuf1975@gmail.com', 'NeSkuf', '1111111', 0, 0, 'CheZaIgra');
