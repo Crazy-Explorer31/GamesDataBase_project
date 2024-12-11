@@ -470,7 +470,6 @@ WHERE Email = 'new_user@gmail.com';
 SELECT * FROM users_history;
 
 ---------------------------------- TASK 10 ----------------------------------
---Danil
 
 -- Добавляет нового пользвоателя игровой площадки, попутно создавая профиль в игре game_name  
 CREATE OR REPLACE PROCEDURE add_user(
@@ -507,7 +506,53 @@ $$ LANGUAGE plpgsql;
 
 
 -- Добавит нового пользователя и создаст ему профиль в игре Майнкрафт    
-CALL add_user(19, 'Nikita2005@gmail.com', 'Nagibator228', '1337zxc', 0, 0, 'Minecraft');
+CALL add_user(19, 'Nikita2005@gmail.com', 'Nagibator228', '1337zxc', 0, 70, 'Minecraft');
+select * from Users where Email = 'Nikita2005@gmail.com';
 
 --Упадет с ошибкой
 CALL add_user(49, 'NeSkuf1975@gmail.com', 'NeSkuf', '1111111', 0, 0, 'CheZaIgra');
+
+
+
+-- Процедура покупки пользователем user_id игры game_name
+CREATE OR REPLACE PROCEDURE buy_game(
+    user_id INT,
+    game_name TEXT)
+AS $$
+
+DECLARE
+    game_id INT;
+    game_cost INT;
+    user_balance INT;
+
+BEGIN
+    SELECT g.GameId, g.GameCost INTO game_id, game_cost
+    FROM Games AS g
+    INNER JOIN GameUnique as gu 
+    ON g.GameId = gu.GameId
+    WHERE gu.GameName = game_name;
+
+    SELECT Balance INTO user_balance
+    FROM Users
+    WHERE UserId = user_id;
+
+    IF user_balance < game_cost 
+      THEN RAISE EXCEPTION 'МаЛо дEнЯк.';
+    END IF;
+
+    UPDATE Users
+    SET Balance = Balance - game_cost
+    WHERE UserId = user_id;
+
+    INSERT INTO Profiles (GameId, UserId, NumberHours)
+    VALUES (game_id, user_id, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Игра купится, балланс уменьшится, профиль создастся. 
+CALL buy_game(6, 'Half-Life');
+select * from Users where UserId = 6;
+select * from Profiles where UserId = 6;
+
+-- Упадет с ошибкой 
+CALL buy_game(6, 'Half-Life');
